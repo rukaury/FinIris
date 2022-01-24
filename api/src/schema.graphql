@@ -1,0 +1,35 @@
+type User {
+    username: String!
+    password: String!
+    email: String!
+}
+
+type Mutation
+{
+    registerUser(username: String!, password: String!, email: String!): User
+    @cypher(
+        statement: """
+            CREATE (user:User {username: $username, password: $password, email: $email})
+            RETURN user
+        """
+    )
+}
+
+type Query
+{
+    fetchUser(username: String!): User
+    @cypher(
+        statement: """
+            MATCH (user:User {username: $username})
+            RETURN user
+        """
+    )
+
+    loginUser(username: String!, password: String!): User
+    @cypher(
+        statement: """
+            MATCH (user:User {username: $username, password: $password})
+            RETURN user
+        """
+    )
+}
