@@ -7,8 +7,8 @@ import { gql } from '@apollo/client'
  **********************************************/
 
 export const FETCH_USER = gql`
-  query fetchUser($username: String!) {
-    fetchUser(username: $username) {
+  query fetchUser($where: UserWhere) {
+    users(where: $where) {
       username
       email
     }
@@ -31,14 +31,12 @@ export const LOG_USER_IN = gql`
  **********************************************/
 
 export const REGISTER_USER = gql`
-  mutation registerUser(
-    $username: String!
-    $password: String!
-    $email: String!
-  ) {
-    registerUser(username: $username, password: $password, email: $email) {
-      username
-      email
+  mutation registerUser($input: [UserCreateInput!]!) {
+    createUsers(input: $input) {
+      users {
+        username
+        email
+      }
     }
   }
 `

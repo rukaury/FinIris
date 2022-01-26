@@ -1,35 +1,70 @@
+enum TransactionType {
+    BranchTransaction
+    ElectronicFundsTransfer
+    InternetBanking
+    PointOfSale
+    AutomatedBankingMachine
+}
+
+enum Account {
+    Debit
+    Credit
+    Savings
+}
+
+enum TransactionCategory {
+    Housing
+    Transportation
+    Food
+    Utilities
+    Clothing
+    HealthCare
+    Insurance
+    Personal
+    Supplies
+    Debit
+    Investments
+    Savings
+    Education
+    Donation
+    Entertainment
+}
+
+type Transaction {
+    transaction_id: ID
+    title: String!
+    account: Account!
+    date: Date!
+    is_debited: Boolean!
+    category: TransactionCategory
+    merchant: Merchant! @relationship (type: "SOLD_BY", direction: OUT)
+    type: TransactionType
+    user: User! @relationship (type: "PURCHASED_BY", properties: "PurchasedOn", direction: IN)
+}
+
+type Merchant {
+    merchant_id: String
+    name: String!
+    transactions: [Transaction] @relationship (type: "SOLD_BY", direction: IN) 
+    location: Location @relationship (type: "LOCATED_AT", direction: OUT)
+}
+
+type Location {
+    address_id: ID
+    address: String
+    country: String
+    province: String
+    city: String
+    merchants: [Merchant] @relationship (type: "LOCATED_AT", direction: IN)
+}
+
 type User {
     username: String!
     password: String!
     email: String!
+    transactions: [Transaction!]! @relationship (type: "PURCHASED_BY", properties: "PurchasedOn", direction: OUT)
 }
 
-type Mutation
-{
-    registerUser(username: String!, password: String!, email: String!): User
-    @cypher(
-        statement: """
-            CREATE (user:User {username: $username, password: $password, email: $email})
-            RETURN user
-        """
-    )
-}
-
-type Query
-{
-    fetchUser(username: String!): User
-    @cypher(
-        statement: """
-            MATCH (user:User {username: $username})
-            RETURN user
-        """
-    )
-
-    loginUser(username: String!, password: String!): User
-    @cypher(
-        statement: """
-            MATCH (user:User {username: $username, password: $password})
-            RETURN user
-        """
-    )
+interface PurchasedOn @relationshipProperties {
+    date: Date!
 }

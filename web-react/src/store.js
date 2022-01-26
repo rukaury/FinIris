@@ -6,9 +6,13 @@ import thunk from 'redux-thunk'
 import { composeWithDevTools } from 'redux-devtools-extension'
 
 import { user } from './user/reducers'
+import { transactions } from './transaction/reducers'
+import { merchants } from './merchant/reducers'
 
 const reducers = {
   user,
+  transactions,
+  merchants,
 }
 
 const persistConfig = {

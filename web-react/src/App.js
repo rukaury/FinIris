@@ -26,13 +26,15 @@ import {
   ChevronLeft as ChevronLeftIcon,
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
+  CloudUpload as UploadIcon,
 } from '@material-ui/icons'
-import Dashboard from './components/Dashboard'
+import Dashboard from './screens/Dashboard'
 import Copyright from './components/Copyright'
 import Register from './screens/Register'
+import TransactionsUpload from './screens/TransactionsUpload'
 import Login from './screens/Login'
 import { connect } from 'react-redux'
-
+import { getUser } from './user/selectors'
 import { logUserOut } from './user/actions'
 
 const drawerWidth = 240
@@ -201,6 +203,15 @@ const App = ({ user = { isLoggedIn: false }, onUserLogout }) => {
                     <ListItemText primary="Dashboard" />
                   </ListItem>
                 </Link>
+                <Divider />
+                <Link to="/upload" className={classes.navLink}>
+                  <ListItem button>
+                    <ListItemIcon>
+                      <UploadIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Upload" />
+                  </ListItem>
+                </Link>
               </List>
               <Divider />
             </Drawer>
@@ -209,6 +220,7 @@ const App = ({ user = { isLoggedIn: false }, onUserLogout }) => {
               <Container maxWidth="lg" className={classes.container}>
                 <Switch>
                   <Route exact path="/" component={Dashboard} />
+                  <Route exact path="/upload" component={TransactionsUpload} />
                   <Route exact path="/login">
                     <Redirect to="/" />
                   </Route>
@@ -246,7 +258,7 @@ const App = ({ user = { isLoggedIn: false }, onUserLogout }) => {
 }
 
 const mapStateToProps = (state) => ({
-  user: state.user,
+  user: getUser(state),
 })
 
 const mapDispatchToProps = (dispatch) => ({

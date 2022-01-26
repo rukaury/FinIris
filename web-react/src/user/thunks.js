@@ -1,33 +1,49 @@
 import { addUser } from './actions'
 import graphQLClient from '../appolo-client'
-import { FETCH_USER, REGISTER_USER, LOG_USER_IN } from './queries'
+import { FETCH_USER, REGISTER_USER } from './queries'
 
 export const registerUser = ({ username, email, password }) => async (
   dispatch
 ) => {
   try {
+    const input = [
+      {
+        username,
+        email,
+        password,
+      },
+    ]
+
+    const where = {
+      username,
+    }
+
     graphQLClient
       .query({
         query: FETCH_USER,
-        variables: { username },
+        variables: { where },
       })
       .then((result) => {
         const {
-          data: { fetchUser },
+          data: { users },
         } = result
-        if (fetchUser) {
+        if (users.length > 0) {
           const message = 'User already Exists'
           console.error(message)
         } else {
           graphQLClient
             .mutate({
               mutation: REGISTER_USER,
-              variables: { username, email, password },
+              variables: { input },
               update: (_cache, result) => {
                 const {
-                  data: { registerUser },
+                  data: {
+                    createUsers: {
+                      users: [user],
+                    },
+                  },
                 } = result
-                dispatch(addUser(registerUser))
+                dispatch(addUser(user))
               },
             })
             .catch(() => {
@@ -49,17 +65,25 @@ export const registerUser = ({ username, email, password }) => async (
 
 export const loginUser = ({ username, password }) => async (dispatch) => {
   try {
+    const fetchInput = {
+      where: {
+        username,
+        password,
+      },
+    }
+
     graphQLClient
       .query({
-        query: LOG_USER_IN,
-        variables: { username, password },
+        query: FETCH_USER,
+        variables: { fetchInput },
       })
       .then((result) => {
         const {
-          data: { loginUser },
+          data: { users },
         } = result
-        if (loginUser) {
-          dispatch(addUser(loginUser))
+        if (users.length > 0) {
+          const [user] = users
+          dispatch(addUser(user))
         } else {
           const message = `Failed to login user!.`
           console.error(message)
