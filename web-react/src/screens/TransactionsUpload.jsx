@@ -10,12 +10,11 @@ import {
     MenuItem,
     Button 
 } from '@material-ui/core';
-import { Alert } from '@material-ui/lab';
+
 import { 
     connectTransactionData,
     extractData, 
-    extractFileData,
-    isCreditAccount 
+    extractFileData
 } from '../transaction/helper';
 
 import { extractMerchantData, removeExistingMerchants } from '../merchant/helper';
@@ -25,6 +24,8 @@ import { getTransactions, getTransactionsLoading } from '../transaction/selector
 import { getMerchants, getMerchantsLoading } from '../merchant/selectors';
 import { loadMerchants, createMerchants } from '../merchant/thunks';
 import { getUsername } from '../user/selectors';
+import { removeExistingTransactions } from '../transaction/helper';
+import UnsavedData from '../components/UnsavedData';
 
 const getInstitutions = () => Object.values(bankInstitutions).map(({ name }) => name);
 const getAccounts = () => Object.keys(bankAccounts);
@@ -40,6 +41,9 @@ const useStyles = makeStyles((theme) => ({
     input: {
         display: 'none',
     },
+    dashboardButton: {
+        marginBlock: theme.spacing(2)
+    }
 }));
 
 const SelectOption = ({ label, options, selectedValue, handleChange}) => {
@@ -54,7 +58,7 @@ const SelectOption = ({ label, options, selectedValue, handleChange}) => {
                 onChange={handleChange}
             >
             {
-                options.map((option, index) => <MenuItem key={`select-menu-${index}`} value={option.toLowerCase()}>{option}</MenuItem>)
+                options.map((option, index) => <MenuItem key={`select-menu-${index}`} value={option}>{option}</MenuItem>)
             }
             </Select>
         </FormControl>
@@ -86,6 +90,66 @@ const UploadButton = ({ handleUpload }) => {
     );
 }
 
+const uploadMerchants = ({ 
+    handleAddMerchants, 
+    filteredMerchants, 
+    unsavedMerchants
+}) => {
+    const maxInput = filteredMerchants.length >= 5 ? 5 : filteredMerchants.length;
+    
+    if(filteredMerchants.length === 0){
+        return { unsavedMerchants };
+    }
+
+    if(filteredMerchants.length >= maxInput){
+        handleAddMerchants(filteredMerchants.slice(0, maxInput))
+        .then(() => {
+            uploadMerchants({ 
+                handleAddMerchants, 
+                filteredMerchants: filteredMerchants.slice(maxInput),
+                unsavedMerchants
+            })
+        })
+        .catch(() => {
+            uploadMerchants({ 
+                handleAddMerchants, 
+                filteredMerchants: filteredMerchants.slice(maxInput),
+                unsavedMerchants: unsavedMerchants.concat(filteredMerchants.slice(0, maxInput))
+            })
+        })
+    }    
+}
+
+const uploadTransactions = ({ 
+    handleAddTransactions, 
+    newTransactions, 
+    unsavedTransactions
+}) => {
+    const maxInput = newTransactions.length >= 5 ? 5 : newTransactions.length;
+    
+    if(newTransactions.length === 0){
+        return { unsavedTransactions };
+    }
+
+    if(newTransactions.length >= maxInput){
+        handleAddTransactions(newTransactions.slice(0, maxInput))
+        .then(() => {
+            uploadTransactions({ 
+                handleAddTransactions, 
+                newTransactions: newTransactions.slice(maxInput),
+                unsavedTransactions
+            })
+        })
+        .catch(() => {
+            uploadTransactions({ 
+                handleAddTransactions, 
+                newTransactions: newTransactions.slice(maxInput),
+                unsavedTransactions: unsavedTransactions.concat(newTransactions.slice(0, maxInput))
+            })
+        })
+    }    
+}
+
 function TransactionsUpload({
     username, 
     transactions, 
@@ -97,12 +161,13 @@ function TransactionsUpload({
     handleAddMerchants,
     handleAddTransactions
 }) {
+    const classes = useStyles();
     const [bank, setBank] = useState("");
     const [account, setAccount] = useState("");
-    const [isCredit, setCredit] = useState(false);
     const [invalidData, setInvalidData] = useState([]);
     const [validData, setValidData] = useState([]);
-    //const [message, setMessage] = useState("");
+    const [unsavedMerchants, setUnsavedMerchants] = useState([]);
+    const [unsavedTransactions, setUnsavedTransactions] = useState([]);
 
     useEffect(() => {
         startLoadingTransactions(username)
@@ -110,33 +175,18 @@ function TransactionsUpload({
     }, [])
 
     useEffect(() => {
-        setCredit(isCreditAccount(account))
-    }, [account])
-
-    useEffect(() => {
         if(validData.length > 0){
             const newMerchants = extractMerchantData(validData);
             const filteredMerchants = removeExistingMerchants(newMerchants, merchants);
-            const filteredTransactions = removeExistingMerchants(validData, transactions);
+            const filteredTransactions = removeExistingTransactions(validData, transactions);
             const newTransactions = connectTransactionData(username, filteredTransactions);
+            const { unsavedMerchants } = uploadMerchants({handleAddMerchants, filteredMerchants, unsavedMerchants: []})
+            const { unsavedTransactions } = uploadTransactions({handleAddTransactions, newTransactions, unsavedTransactions: []})
 
-            handleAddMerchants(filteredMerchants)
-            .then(message => {
-                console.log(message);
-                handleAddTransactions(newTransactions)
-                .then(message => console.log(message))
-                .catch(message => console.log(message))
-            })
-            .catch(message => console.log(message))            
+            setUnsavedMerchants(unsavedMerchants);
+            setUnsavedTransactions(unsavedTransactions);
         }
     }, [validData])
-
-    useEffect(() => {
-        if(invalidData.length > 0){
-            console.log(invalidData);
-        }
-    }, [invalidData])
-
 
     const handleBankChange = (event) => {
         setBank(event.target.value);
@@ -150,7 +200,7 @@ function TransactionsUpload({
         const file = event.target.files[0];
         extractFileData(file)
         .then((result) => {
-            const { validData, invalidData } = extractData(result, isCredit);
+            const { validData, invalidData } = extractData(result, account);
             setValidData(validData);
             setInvalidData(invalidData);
         })    
@@ -182,12 +232,82 @@ function TransactionsUpload({
     ]
 
     const dataLoadingMessage = <div>Loading data...</div>
+
+    const merchantsHeaders = [
+        "Merchant Id",
+        "Merchant Name",
+        "Merchant City",
+        "Mrchant Province"
+    ]
+
+    const transactionsHeaders = [
+        "Date",
+        "Title",
+        "Amount",
+        "type",
+        "Merchant Name"
+    ]
+
+    const invalidDataHeaders = [
+        "Date",
+        "Title",
+        "Debit Amount",
+        "Credit Amount",
+        "Card Number"
+    ]
+
     const content = (
         <>
-            <HorizontalLinearStepper steps={steps} />
             {
-                false &&
-                <Alert severity="warning">{}</Alert>
+                (validData.length === 0 && invalidData.length === 0) &&
+                <HorizontalLinearStepper steps={steps} /> 
+            }
+
+            {
+                unsavedTransactions.length > 0 &&
+                <UnsavedData 
+                headers={transactionsHeaders} 
+                rows={
+                    unsavedTransactions.map(({ 
+                        title, 
+                        type, 
+                        amount, 
+                        user: { connect: { edge: { date } } },
+                        merchant: { connect: { where: {node: { name } } } }
+                    }) => [date, title, amount, type, name])
+                }
+                />
+            }
+
+            {
+                unsavedMerchants.length > 0 &&
+                <UnsavedData 
+                headers={merchantsHeaders} 
+                rows={
+                    unsavedMerchants.map(({ 
+                        merchant_id, 
+                        name, 
+                        loaction: { create: { node: { city, province } } }
+                    }) => [merchant_id, name, city, province])
+                }
+                />
+            }
+
+            {
+                invalidData.length > 0 &&
+                <>
+                    <h3>Invalid Data</h3>
+                    <p>Transaction date or amount is invalid!</p>
+                    <UnsavedData 
+                    headers={invalidDataHeaders} 
+                    rows={invalidData}
+                    />
+                </>
+            }
+
+{
+                !(validData.length === 0) &&
+                <Button className={classes.dashboardButton} href="/" variant="contained" color="primary">Go to Dashboard!</Button> 
             }
         </>
     ) 

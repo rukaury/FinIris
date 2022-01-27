@@ -33,8 +33,7 @@ enum TransactionCategory {
 type Transaction {
     transaction_id: ID
     title: String!
-    account: Account!
-    date: Date!
+    amount: Float!
     is_debited: Boolean!
     category: TransactionCategory
     merchant: Merchant! @relationship (type: "SOLD_BY", direction: OUT)
@@ -67,4 +66,5 @@ type User {
 
 interface PurchasedOn @relationshipProperties {
     date: Date!
+    account: Account!
 }

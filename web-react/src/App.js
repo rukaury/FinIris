@@ -224,7 +224,7 @@ const App = ({ user = { isLoggedIn: false }, onUserLogout }) => {
                   <Route exact path="/login">
                     <Redirect to="/" />
                   </Route>
-                  <Route exact path="/register">
+                  <Route exact path="*">
                     <Redirect to="/" />
                   </Route>
                 </Switch>
@@ -242,7 +242,7 @@ const App = ({ user = { isLoggedIn: false }, onUserLogout }) => {
             <Switch>
               <Route exact path="/login" component={Login} />
               <Route exact path="/register" component={Register} />
-              <Route exact path="/">
+              <Route exact path="*">
                 <Redirect to="/login" />
               </Route>
             </Switch>

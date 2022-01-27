@@ -1,18 +1,20 @@
 import { transactionTypes, bankAccounts } from './enums'
 import xlsx from 'xlsx'
 
-export const doesTransactionExist = (
-  transactions,
-  { date, title, amount, is_debited, account }
-) => {
+export const doesTransactionExist = (transactions, newTransaction) => {
   if (transactions.length > 0) {
     const existing = transactions.filter(
-      (transaction) =>
-        Date(transaction.date) === Date(date) &&
-        transaction.title === title &&
-        transaction.amount === amount &&
-        transaction.account === account &&
-        transaction.is_debited === is_debited
+      ({ title, type, amount, is_debited, userConnection: { edges } }) => {
+        const [{ date, account }] = edges
+        return (
+          Date(newTransaction.date) === Date(date) &&
+          newTransaction.title === title &&
+          newTransaction.amount === amount &&
+          newTransaction.account === account &&
+          newTransaction.is_debited === is_debited &&
+          newTransaction.type === type
+        )
+      }
     )
 
     if (existing.length > 0) {
@@ -28,41 +30,55 @@ export const removeExistingTransactions = (
   existingTransactions
 ) => {
   return newTransactions.filter(
-    ({ date, title, amount, is_debited, account }) =>
+    ({ date, type, title, amount, is_debited, account }) =>
       !doesTransactionExist(existingTransactions, {
         date,
         title,
         amount,
         is_debited,
+        type,
         account,
       })
   )
 }
 
 export const connectTransactionData = (username, transactions) => {
-  return transactions.map((transaction) => ({
-    ...transaction,
-    user: {
-      connect: {
-        where: {
-          username: username,
-        },
-      },
-    },
-    merchant: {
-      connect: {
-        where: {
-          name: transaction?.merchant?.name || '',
-          AND: {
-            merchant_id: transaction?.merchant?.merchant_id || '',
+  return transactions.map(
+    ({ title, is_debited, type, date, account, merchant, amount }) => ({
+      title,
+      is_debited,
+      type,
+      amount,
+      user: {
+        connect: {
+          where: {
+            node: {
+              username: username,
+            },
+          },
+          edge: {
+            date: date,
+            account: account,
           },
         },
       },
-    },
-  }))
+      merchant: {
+        connect: {
+          where: {
+            node: {
+              name: merchant?.name || '',
+              AND: {
+                merchant_id: merchant?.merchant_id || '',
+              },
+            },
+          },
+        },
+      },
+    })
+  )
 }
 
-export const isCreditAccount = (searchAccount) => {
+const isCreditAccount = (searchAccount) => {
   const account = Object.keys(bankAccounts).filter((key) =>
     key.toLowerCase().includes('credit')
   )
@@ -119,6 +135,7 @@ const extractTransactionData = (title, isCreditAccount) => {
 
     return {
       cleanData: {
+        type: null,
         title,
       },
       title,
@@ -155,14 +172,17 @@ const extractMerchantData = (text) => {
     name,
     location: {
       create: {
-        city,
-        province,
+        node: {
+          city,
+          province,
+        },
       },
     },
   }
 }
 
-export const extractData = (extractedData, isCreditAccount) => {
+export const extractData = (extractedData, account) => {
+  const isCredit = isCreditAccount(account)
   const invalidData = extractedData.filter((data) => {
     const [date] = data
     const transactionTitle = String(data[1])
@@ -205,7 +225,7 @@ export const extractData = (extractedData, isCreditAccount) => {
     const is_debited = data[2] ? true : false
     const { title, cleanData } = extractTransactionData(
       transactionTitle,
-      isCreditAccount
+      isCredit
     )
 
     if (title) {
@@ -213,6 +233,7 @@ export const extractData = (extractedData, isCreditAccount) => {
         date,
         amount: parseFloat(amount),
         is_debited,
+        account: account,
         merchant: extractMerchantData(title),
         ...cleanData,
       }
@@ -222,6 +243,7 @@ export const extractData = (extractedData, isCreditAccount) => {
       date,
       amount: parseFloat(amount),
       is_debited,
+      account: account,
       merchant: null,
       ...cleanData,
     }

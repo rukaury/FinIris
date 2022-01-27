@@ -20,7 +20,15 @@ export const extractMerchantData = (data) => {
 }
 
 export const removeExistingMerchants = (newMerchants, existingMerchants) => {
-  return newMerchants.filter(
+  const uniqueMerchants = newMerchants.filter(
+    (merchant, index, self) =>
+      self.findIndex(
+        (m) =>
+          m.name === merchant.name && m.merchant_id === merchant.merchant_id
+      ) === index
+  )
+
+  return uniqueMerchants.filter(
     ({ name, merchant_id }) =>
       !doesMerchantExist(existingMerchants, { name, merchant_id })
   )

@@ -11,8 +11,16 @@ export const FETCH_TRANSACTIONS = gql`
     transactions(where: $where) {
       transaction_id
       title
-      account
       type
+      is_debited
+      category
+      amount
+      userConnection {
+        edges {
+          date
+          account
+        }
+      }
     }
   }
 `
@@ -27,12 +35,11 @@ export const CREATE_TRANSACTIONS = gql`
   mutation createTransactions($input: [TransactionCreateInput!]!) {
     createTransactions(input: $input) {
       transactions {
-        account
-        date
         title
         is_debited
         category
         type
+        amount
         transaction_id
       }
     }
