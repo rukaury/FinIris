@@ -25,7 +25,7 @@ export const removeExistingMerchants = (newMerchants, existingMerchants) => {
       self.findIndex(
         (m) =>
           m.name === merchant.name && m.merchant_id === merchant.merchant_id
-      ) === index
+      ) === index || !merchant.name
   )
 
   return uniqueMerchants.filter(

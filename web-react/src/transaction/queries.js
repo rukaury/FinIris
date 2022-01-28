@@ -22,6 +22,15 @@ export const FETCH_TRANSACTIONS = gql`
         }
       }
     }
+    transactionsAggregate {
+      count
+      amount {
+        max
+        min
+        average
+        sum
+      }
+    }
   }
 `
 

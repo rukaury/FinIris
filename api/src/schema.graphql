@@ -31,7 +31,7 @@ enum TransactionCategory {
 }
 
 type Transaction {
-    transaction_id: ID
+    transaction_id: ID! @id
     title: String!
     amount: Float!
     is_debited: Boolean!
@@ -45,22 +45,23 @@ type Merchant {
     merchant_id: String
     name: String!
     transactions: [Transaction] @relationship (type: "SOLD_BY", direction: IN) 
-    location: Location @relationship (type: "LOCATED_AT", direction: OUT)
+    city: City @relationship (type: "LOCATED_IN_CITY", direction: OUT)
+    province: Province @relationship (type: "LOCATED_IN_PROVINCE", direction: OUT)
 }
 
-type Location {
-    address_id: ID
-    address: String
-    country: String
-    province: String
-    city: String
-    merchants: [Merchant] @relationship (type: "LOCATED_AT", direction: IN)
+type City {
+    name: String! @unique
+}
+
+type Province {
+    name: String 
+    code: String! @unique
 }
 
 type User {
-    username: String!
+    username: String! @unique 
     password: String!
-    email: String!
+    email: String! @unique
     transactions: [Transaction!]! @relationship (type: "PURCHASED_BY", properties: "PurchasedOn", direction: OUT)
 }
 

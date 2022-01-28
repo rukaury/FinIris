@@ -3,10 +3,12 @@ import {
   LOAD_TRANSACTIONS_FAILURE,
   LOAD_TRANSACTIONS_IN_PROGRESS,
   LOAD_TRANSACTIONS_SUCCESS,
+  ADD_TRANSACTIONS_AGGREGATE,
 } from './actions'
 
 const initialState = {
   isLoading: false,
+  transactionsAggregate: {},
   data: [],
 }
 
@@ -19,6 +21,13 @@ export const transactions = (state = initialState, action) => {
       return {
         ...state,
         data: state.data.concat(transactions),
+      }
+    }
+    case ADD_TRANSACTIONS_AGGREGATE: {
+      const { transactionsAggregate } = payload
+      return {
+        ...state,
+        transactionsAggregate: transactionsAggregate,
       }
     }
     case LOAD_TRANSACTIONS_SUCCESS: {

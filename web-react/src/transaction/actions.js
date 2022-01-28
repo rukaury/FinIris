@@ -4,6 +4,12 @@ export const addTransactions = (transactions) => ({
   payload: { transactions },
 })
 
+export const ADD_TRANSACTIONS_AGGREGATE = 'ADD_TRANSACTIONS_AGGREGATE'
+export const addTransactionsAggregate = (transactionsAggregate) => ({
+  type: ADD_TRANSACTIONS_AGGREGATE,
+  payload: { transactionsAggregate },
+})
+
 export const LOAD_TRANSACTIONS_IN_PROGRESS = 'LOAD_TRANSACTIONS_IN_PROGRESS'
 export const loadTransactionsInProgress = () => ({
   type: LOAD_TRANSACTIONS_IN_PROGRESS,

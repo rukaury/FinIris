@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import HorizontalLinearStepper from '../components/HorizontalLinearStepper';
-import { makeStyles } from '@material-ui/core';
+import { makeStyles, Typography } from '@material-ui/core';
 import { bankInstitutions } from '../transaction/enums';
 import { bankAccounts } from '../transaction/enums';
 import { 
@@ -95,59 +95,66 @@ const uploadMerchants = ({
     filteredMerchants, 
     unsavedMerchants
 }) => {
-    const maxInput = filteredMerchants.length >= 5 ? 5 : filteredMerchants.length;
+    return new Promise((resolve) => {
+        const maxInput = filteredMerchants.length >= 5 ? 5 : filteredMerchants.length;
     
-    if(filteredMerchants.length === 0){
-        return { unsavedMerchants };
-    }
+        if(filteredMerchants.length === 0){
+            return resolve(unsavedMerchants);
+        }
 
-    if(filteredMerchants.length >= maxInput){
-        handleAddMerchants(filteredMerchants.slice(0, maxInput))
-        .then(() => {
-            uploadMerchants({ 
-                handleAddMerchants, 
-                filteredMerchants: filteredMerchants.slice(maxInput),
-                unsavedMerchants
+        if(filteredMerchants.length >= maxInput){
+            handleAddMerchants(filteredMerchants.slice(0, maxInput))
+            .then(() => {
+                return resolve(uploadMerchants({ 
+                    handleAddMerchants, 
+                    filteredMerchants: filteredMerchants.slice(maxInput),
+                    unsavedMerchants
+                }))
             })
-        })
-        .catch(() => {
-            uploadMerchants({ 
-                handleAddMerchants, 
-                filteredMerchants: filteredMerchants.slice(maxInput),
-                unsavedMerchants: unsavedMerchants.concat(filteredMerchants.slice(0, maxInput))
+            .catch(() => {
+                return resolve(uploadMerchants({ 
+                    handleAddMerchants, 
+                    filteredMerchants: filteredMerchants.slice(maxInput),
+                    unsavedMerchants: unsavedMerchants.concat(filteredMerchants.slice(0, maxInput))
+                }))
             })
-        })
-    }    
+        }
+    })    
 }
 
 const uploadTransactions = ({ 
     handleAddTransactions, 
     newTransactions, 
-    unsavedTransactions
+    unsavedTransactions,
+    completed = false
 }) => {
-    const maxInput = newTransactions.length >= 5 ? 5 : newTransactions.length;
+    return new Promise((resolve) => {
+        const maxInput = newTransactions.length >= 5 ? 5 : newTransactions.length;
     
-    if(newTransactions.length === 0){
-        return { unsavedTransactions };
-    }
+        if(newTransactions.length === 0){
+            return resolve({ unsavedTransactions, completed: true});
+        }
 
-    if(newTransactions.length >= maxInput){
-        handleAddTransactions(newTransactions.slice(0, maxInput))
-        .then(() => {
-            uploadTransactions({ 
-                handleAddTransactions, 
-                newTransactions: newTransactions.slice(maxInput),
-                unsavedTransactions
+        if(newTransactions.length >= maxInput){
+            handleAddTransactions(newTransactions.slice(0, maxInput))
+            .then(() => {
+                return resolve(uploadTransactions({ 
+                    handleAddTransactions, 
+                    newTransactions: newTransactions.slice(maxInput),
+                    unsavedTransactions,
+                    completed
+                }))
             })
-        })
-        .catch(() => {
-            uploadTransactions({ 
-                handleAddTransactions, 
-                newTransactions: newTransactions.slice(maxInput),
-                unsavedTransactions: unsavedTransactions.concat(newTransactions.slice(0, maxInput))
+            .catch(() => {
+                return resolve(uploadTransactions({ 
+                    handleAddTransactions, 
+                    newTransactions: newTransactions.slice(maxInput),
+                    unsavedTransactions: unsavedTransactions.concat(newTransactions.slice(0, maxInput)),
+                    completed
+                }))
             })
-        })
-    }    
+        }
+    })    
 }
 
 function TransactionsUpload({
@@ -168,6 +175,7 @@ function TransactionsUpload({
     const [validData, setValidData] = useState([]);
     const [unsavedMerchants, setUnsavedMerchants] = useState([]);
     const [unsavedTransactions, setUnsavedTransactions] = useState([]);
+    const [completed, setCompleted] = useState(true);
 
     useEffect(() => {
         startLoadingTransactions(username)
@@ -180,11 +188,13 @@ function TransactionsUpload({
             const filteredMerchants = removeExistingMerchants(newMerchants, merchants);
             const filteredTransactions = removeExistingTransactions(validData, transactions);
             const newTransactions = connectTransactionData(username, filteredTransactions);
-            const { unsavedMerchants } = uploadMerchants({handleAddMerchants, filteredMerchants, unsavedMerchants: []})
-            const { unsavedTransactions } = uploadTransactions({handleAddTransactions, newTransactions, unsavedTransactions: []})
-
-            setUnsavedMerchants(unsavedMerchants);
-            setUnsavedTransactions(unsavedTransactions);
+            uploadMerchants({handleAddMerchants, filteredMerchants, unsavedMerchants: []})
+            .then(unsavedMerchants => setUnsavedMerchants(unsavedMerchants))
+            uploadTransactions({handleAddTransactions, newTransactions, unsavedTransactions: []})
+            .then(({ unsavedTransactions, completed }) => {
+                setUnsavedTransactions(unsavedTransactions);
+                setCompleted(completed)
+            })
         }
     }, [validData])
 
@@ -197,6 +207,7 @@ function TransactionsUpload({
     };
 
     const handleFileUpload = (event) => {
+        setCompleted(false);
         const file = event.target.files[0];
         extractFileData(file)
         .then((result) => {
@@ -259,7 +270,7 @@ function TransactionsUpload({
     const content = (
         <>
             {
-                (validData.length === 0 && invalidData.length === 0) &&
+                !completed || (validData.length === 0 && invalidData.length === 0) &&
                 <HorizontalLinearStepper steps={steps} /> 
             }
 
@@ -305,9 +316,14 @@ function TransactionsUpload({
                 </>
             }
 
-{
-                !(validData.length === 0) &&
+            {
+                completed &&
                 <Button className={classes.dashboardButton} href="/" variant="contained" color="primary">Go to Dashboard!</Button> 
+            }
+
+            {
+                !completed &&
+                <Typography>Uploading data...</Typography> 
             }
         </>
     ) 
@@ -330,4 +346,4 @@ const mapDispatchToProps = dispatch => ({
     handleAddTransactions: newTransactions => dispatch(createTransactions(newTransactions))
 })
   
-  export default connect(mapStateToProps, mapDispatchToProps)(TransactionsUpload);
+export default connect(mapStateToProps, mapDispatchToProps)(TransactionsUpload);

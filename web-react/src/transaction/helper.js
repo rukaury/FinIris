@@ -170,16 +170,39 @@ const extractMerchantData = (text) => {
   return {
     merchant_id,
     name,
-    location: {
-      create: {
-        node: {
-          city,
-          province,
+    city: {
+      connectOrCreate: {
+        where: {
+          node: {
+            name: city,
+          },
+        },
+        onCreate: {
+          node: {
+            name: city,
+          },
+        },
+      },
+    },
+    province: {
+      connectOrCreate: {
+        where: {
+          node: {
+            code: province,
+          },
+        },
+        onCreate: {
+          node: {
+            name: province,
+            code: province,
+          },
         },
       },
     },
   }
 }
+
+const reducer = (previousValue, currentValue) => previousValue + currentValue
 
 export const extractData = (extractedData, account) => {
   const isCredit = isCreditAccount(account)
@@ -280,4 +303,12 @@ export const extractFileData = (file) => {
 
     reader.readAsText(file)
   })
+}
+
+export const getTotalSpentOrIncome = (transactions, is_debit) => {
+  const filterTransactions = transactions.filter(
+    ({ is_debited }) => is_debited === is_debit
+  )
+  const mapTransactions = filterTransactions.map(({ amount }) => amount)
+  return mapTransactions.length > 0 ? mapTransactions.reduce(reducer) : 0
 }

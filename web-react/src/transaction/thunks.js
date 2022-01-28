@@ -4,6 +4,7 @@ import {
   loadTransactionsInProgress,
   loadTransactionsSuccess,
   addTransactions,
+  addTransactionsAggregate,
 } from './actions'
 import { FETCH_TRANSACTIONS, CREATE_TRANSACTIONS } from './queries'
 
@@ -23,9 +24,10 @@ export const loadTransactions = (username) => async (dispatch) => {
       })
       .then((result) => {
         const {
-          data: { transactions },
+          data: { transactions, transactionsAggregate },
         } = result
         dispatch(loadTransactionsSuccess(transactions))
+        dispatch(addTransactionsAggregate(transactionsAggregate))
       })
       .catch(() => dispatch(loadTransactionsFailure()))
   } catch (e) {

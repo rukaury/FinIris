@@ -11,12 +11,12 @@ export const FETCH_MERCHANTS = gql`
     merchants(where: $where) {
       merchant_id
       name
-      location {
-        city
-        province
-        country
-        address
-        address_id
+      city {
+        name
+      }
+      province {
+        name
+        code
       }
     }
   }
@@ -37,12 +37,12 @@ export const CREATE_MERCHANTS = gql`
         transactions {
           transaction_id
         }
-        location {
-          city
-          province
-          country
-          address
-          address_id
+        city {
+          name
+        }
+        province {
+          name
+          code
         }
       }
     }
