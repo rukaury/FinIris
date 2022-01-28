@@ -202,8 +202,6 @@ const extractMerchantData = (text) => {
   }
 }
 
-const reducer = (previousValue, currentValue) => previousValue + currentValue
-
 export const extractData = (extractedData, account) => {
   const isCredit = isCreditAccount(account)
   const invalidData = extractedData.filter((data) => {
@@ -303,12 +301,4 @@ export const extractFileData = (file) => {
 
     reader.readAsText(file)
   })
-}
-
-export const getTotalSpentOrIncome = (transactions, is_debit) => {
-  const filterTransactions = transactions.filter(
-    ({ is_debited }) => is_debited === is_debit
-  )
-  const mapTransactions = filterTransactions.map(({ amount }) => amount)
-  return mapTransactions.length > 0 ? mapTransactions.reduce(reducer) : 0
 }

@@ -5,8 +5,14 @@ import {
   loadTransactionsSuccess,
   addTransactions,
   addTransactionsAggregate,
+  addTotalSpent,
+  addIncome,
 } from './actions'
-import { FETCH_TRANSACTIONS, CREATE_TRANSACTIONS } from './queries'
+import {
+  FETCH_TRANSACTIONS,
+  CREATE_TRANSACTIONS,
+  FETCH_TRANSACTION_AGGREGATE,
+} from './queries'
 
 export const loadTransactions = (username) => async (dispatch) => {
   try {
@@ -32,6 +38,68 @@ export const loadTransactions = (username) => async (dispatch) => {
       .catch(() => dispatch(loadTransactionsFailure()))
   } catch (e) {
     dispatch(loadTransactionsFailure())
+  }
+}
+
+export const loadTotalSpent = () => async (dispatch) => {
+  try {
+    const where = {
+      is_debited: true,
+    }
+
+    graphQlClient
+      .query({
+        query: FETCH_TRANSACTION_AGGREGATE,
+        variables: { where },
+      })
+      .then((result) => {
+        const {
+          data: {
+            transactionsAggregate: {
+              amount: { sum },
+            },
+          },
+        } = result
+        dispatch(addTotalSpent(sum))
+      })
+      .catch(() => {
+        const message = 'An error occured while getting the total spent.'
+        console.log(message)
+      })
+  } catch (e) {
+    const message = 'An error occured while getting the total spent.'
+    console.log(message)
+  }
+}
+
+export const loadIncome = () => async (dispatch) => {
+  try {
+    const where = {
+      is_debited: false,
+    }
+
+    graphQlClient
+      .query({
+        query: FETCH_TRANSACTION_AGGREGATE,
+        variables: { where },
+      })
+      .then((result) => {
+        const {
+          data: {
+            transactionsAggregate: {
+              amount: { sum },
+            },
+          },
+        } = result
+        dispatch(addIncome(sum))
+      })
+      .catch(() => {
+        const message = 'An error occured while getting the total spent.'
+        console.log(message)
+      })
+  } catch (e) {
+    const message = 'An error occured while getting the total spent.'
+    console.log(message)
   }
 }
 

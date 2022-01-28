@@ -4,11 +4,15 @@ import {
   LOAD_TRANSACTIONS_IN_PROGRESS,
   LOAD_TRANSACTIONS_SUCCESS,
   ADD_TRANSACTIONS_AGGREGATE,
+  ADD_TOTAL_SPENT,
+  ADD_INCOME,
 } from './actions'
 
 const initialState = {
   isLoading: false,
   transactionsAggregate: {},
+  totalSpent: 0,
+  income: 0,
   data: [],
 }
 
@@ -16,6 +20,20 @@ export const transactions = (state = initialState, action) => {
   const { type, payload } = action
 
   switch (type) {
+    case ADD_TOTAL_SPENT: {
+      const { totalSpent } = payload
+      return {
+        ...state,
+        totalSpent: totalSpent,
+      }
+    }
+    case ADD_INCOME: {
+      const { income } = payload
+      return {
+        ...state,
+        income,
+      }
+    }
     case ADD_TRANSACTIONS: {
       const { transactions } = payload
       return {

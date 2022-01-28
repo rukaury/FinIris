@@ -34,6 +34,20 @@ export const FETCH_TRANSACTIONS = gql`
   }
 `
 
+export const FETCH_TRANSACTION_AGGREGATE = gql`
+  query transactionsAggregate($where: TransactionWhere) {
+    transactionsAggregate(where: $where) {
+      count
+      amount {
+        max
+        min
+        average
+        sum
+      }
+    }
+  }
+`
+
 /*********************************************
  *
  * MUTATIONS
