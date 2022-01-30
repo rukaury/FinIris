@@ -1,29 +1,29 @@
-import { createStore, combineReducers, applyMiddleware } from 'redux'
-import { persistReducer } from 'redux-persist'
-import storage from 'redux-persist/lib/storage'
-import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2'
-import thunk from 'redux-thunk'
-import { composeWithDevTools } from 'redux-devtools-extension'
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
+import thunk from 'redux-thunk';
+import { composeWithDevTools } from 'redux-devtools-extension';
 
-import { user } from './user/reducers'
-import { transactions } from './transaction/reducers'
-import { merchants } from './merchant/reducers'
+import { user } from './store/user/reducers';
+import { transactions } from './store/transaction/reducers';
+import { merchants } from './store/merchant/reducers';
 
 const reducers = {
   user,
   transactions,
-  merchants,
-}
+  merchants
+};
 
 const persistConfig = {
   key: 'root',
   storage,
-  stateReconciler: autoMergeLevel2,
-}
+  stateReconciler: autoMergeLevel2
+};
 
-const rootReducer = combineReducers(reducers)
+const rootReducer = combineReducers(reducers);
 
-const persistedReducer = persistReducer(persistConfig, rootReducer)
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const configureStore = () =>
-  createStore(persistedReducer, composeWithDevTools(applyMiddleware(thunk)))
+  createStore(persistedReducer, composeWithDevTools(applyMiddleware(thunk)));

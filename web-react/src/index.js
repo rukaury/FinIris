@@ -1,23 +1,43 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import './index.css'
-import App from './App'
-import registerServiceWorker from './registerServiceWorker'
-import { Provider } from 'react-redux'
-import { configureStore } from './store'
-import { persistStore } from 'redux-persist'
-import { PersistGate } from 'redux-persist/lib/integration/react'
+// scroll bar
+import 'simplebar/src/simplebar.css';
 
-const store = configureStore()
-const persistor = persistStore(store)
+import ReactDOM from 'react-dom';
+import { BrowserRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 
-const Main = () => (
+//
+import { Provider } from 'react-redux';
+import { persistStore } from 'redux-persist';
+import { PersistGate } from 'redux-persist/lib/integration/react';
+import App from './App';
+import * as serviceWorker from './serviceWorker';
+import reportWebVitals from './reportWebVitals';
+
+// Store
+
+import { configureStore } from './store';
+// ----------------------------------------------------------------------
+
+const store = configureStore();
+const persistor = persistStore(store);
+
+ReactDOM.render(
   <Provider store={store}>
     <PersistGate loading={<div>Loading data ...</div>} persistor={persistor}>
-      <App />
+      <HelmetProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </HelmetProvider>
     </PersistGate>
-  </Provider>
-)
+  </Provider>,
+  document.getElementById('root')
+);
 
-ReactDOM.render(<Main />, document.getElementById('root'))
-registerServiceWorker()
+// If you want to enable client cache, register instead.
+serviceWorker.unregister();
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();

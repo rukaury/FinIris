@@ -31,10 +31,10 @@ enum TransactionCategory {
 }
 
 type Transaction {
-    transaction_id: ID! @id
+    transactionId: ID! @id
     title: String!
     amount: Float!
-    is_debited: Boolean!
+    isDebited: Boolean!
     category: TransactionCategory
     merchant: Merchant! @relationship (type: "SOLD_BY", direction: OUT)
     type: TransactionType
@@ -42,7 +42,7 @@ type Transaction {
 }
 
 type Merchant {
-    merchant_id: String
+    merchantId: String
     name: String!
     transactions: [Transaction] @relationship (type: "SOLD_BY", direction: IN) 
     city: City @relationship (type: "LOCATED_IN_CITY", direction: OUT)

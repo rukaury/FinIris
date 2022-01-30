@@ -1,8 +1,9 @@
 {
   "devDependencies": {
+    "@babel/eslint-parser": "^7.15.7",
     "concurrently": "^5.2.0",
     "dotenv": "^8.2.0",
-    "eslint": "^7.19.0",
+    "eslint": "^7.32.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.3",
     "eslint-plugin-react": "^7.20.0",
@@ -19,12 +20,14 @@
     "build": "node scripts/build.js",
     "format": "find . -name \"*.js\" | grep -v node_modules | grep -v build | xargs prettier --write",
     "format:log": "find . -name \"*.js\" | grep -v node_modules | grep -v build | xargs prettier",
-    "inferschema:write": "node scripts/inferSchema.js"
+    "inferschema:write": "node scripts/inferSchema.js",
+    "lint": "eslint --ext .js,.jsx ./web-react/src",
+    "lint:fix": "eslint --fix --ext .js,.jsx ./web-react/src"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+  "babel": {
+    "presets": [
+      "@babel/preset-react"
+    ]
   },
   "lint-staged": {
     "*.js": [
